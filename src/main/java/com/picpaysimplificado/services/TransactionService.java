@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class TransactionService {
@@ -23,6 +24,7 @@ public class TransactionService {
     @Autowired
     private TransactionRepository repository;
 
+    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
@@ -48,12 +50,12 @@ public class TransactionService {
         sender.setBalance(sender.getBalance().subtract(transation.value()));
         receiver.setBalance(receiver.getBalance().add(transation.value()));
 
-        repository.save(newTransaction);
-        userService.saveUser(sender);
-        userService.saveUser(receiver);
+        this.repository.save(newTransaction);
+        this.userService.saveUser(sender);
+        this.userService.saveUser(receiver);
 
         this.notificationService.sendNotification(sender, "Transação realizada com sucesso!");
-        this.notificationService.sendNotification(receiver, "Transação realizada com sucesso!");
+        this.notificationService.sendNotification(receiver, "Transação recebida com sucesso!");
 
 
         return newTransaction;
@@ -63,7 +65,7 @@ public class TransactionService {
         ResponseEntity<Map> authorizationResponse = restTemplate.getForEntity("https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6", Map.class);
 
         if(authorizationResponse.getStatusCode() == HttpStatus.OK){
-            String message = (String) authorizationResponse.getBody().get("message");
+            String message = (String) Objects.requireNonNull(authorizationResponse.getBody()).get("message");
             return "Autorizado".equalsIgnoreCase(message);
         } else return false;
     }
